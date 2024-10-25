@@ -6,7 +6,7 @@ import { movieValidator } from '#validators/movie'
 export default class MoviesController {
   async index({ auth, response }: HttpContext) {
     const user = auth.user
-    if (!user || user.membershipId === null) {
+    if (user?.membershipId === null) {
       return response.unauthorized({ message: 'You do not have a membership' })
     }
 

@@ -11,8 +11,8 @@ export default class extends BaseSchema {
       table.string('password').notNullable()
       table.integer('membership_id').unsigned().references('id').inTable('memberships').nullable()
 
-      table.timestamp('created_at').notNullable()
-      table.timestamp('updated_at').nullable()
+      table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })
   }
 

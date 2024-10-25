@@ -1,31 +1,35 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
+import { HttpContext } from '@adonisjs/core/http'
 
-const AuthMiddleware = middleware.auth
+const MoviesController = () => import('#controllers/movies_controller')
+const GenresController = () => import('#controllers/genres_controller')
+const AuthController = () => import('#controllers/auth_controller')
+const MembershipController = () => import('#controllers/memberships_controller')
 
-router.get('/', async () => {
-  return {
-    hello: 'world',
-  }
+router.get('/', async ({ response }: HttpContext) => {
+  return response.ok({
+    message: 'Welcome to the API Movie Flixera'
+  })
 })
 
-router.get('/register', '#controllers/auth_controller.register').as('auth.register')
-router.post('/login', '#controllers/auth_controller.login').as('auth.login')
-router.delete('/logout', '#controllers/auth_controller.logout').as('auth.logout').middleware([AuthMiddleware])
-router.get('/me', '#controllers/auth_controller.me').as('auth.me').middleware([AuthMiddleware])
+router.post('/register', [AuthController, 'register']).as('auth.register')
+router.post('/login', [AuthController, 'login']).as('auth.login')
+router.delete('/logout', [AuthController, 'logout']).as('auth.logout').use(middleware.auth())
+router.get('/me', [AuthController, 'me']).as('auth.me').use(middleware.auth())
 
 router.group(() => {
-  router.get('/', '#controllers/movies_controller.index')
-  router.post('/', '#controllers/movies_controller.store')
-  router.get('/:id', '#controllers/movies_controller.show')
-  router.put('/:id', '#controllers/movies_controller.update')
-  router.delete('/:id', '#controllers/movies_controller.destroy')
-}).prefix('api/v1/movies').middleware([AuthMiddleware])
+  router.get('/', [MoviesController, 'index'])
+  router.post('/', [MoviesController, 'store'])
+  router.get('/:id', [MoviesController, 'show'])
+  router.put('/:id', [MoviesController, 'update'])
+  router.delete('/:id', [MoviesController, 'destroy'])
+}).prefix('api/v1/movies').use(middleware.auth())
 
 router.group(() => {
-  router.get('/', '#controllers/genres_controller.index')
-  router.get('/:id', '#controllers/genres_controller.show')
-}).prefix('api/v1/genres').middleware([AuthMiddleware])
+  router.get('/', [GenresController, 'index'])
+  router.get('/:id', [GenresController, 'show'])
+}).prefix('api/v1/genres').use(middleware.auth())
 
-router.get('/api/v1/memberships', '#controllers/memberships_controller.index')
-router.post('/api/v1/memberships/subscribe', '#controllers/memberships_controller.subscribe').middleware([AuthMiddleware])
+router.get('/api/v1/memberships', [MembershipController, 'index']).use(middleware.auth())
+router.post('/api/v1/memberships/subscribe', [MembershipController, 'subscribe']).use(middleware.auth())
