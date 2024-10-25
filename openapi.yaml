@@ -1,0 +1,377 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: API Movie - FLixera 😎
+  description: API untuk website movie (Flixera).
+servers:
+  - url: http://localhost:3333/api/v1
+    description: Development Server
+
+tags:
+  - name: Films
+    description: API terkait film
+  - name: Genres
+    description: API terkait genre
+  - name: Memberships
+    description: API terkait membership
+  - name: Auth
+    description: API terkait autentikasi
+
+paths:
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Login dan mendapatkan API token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Berhasil login, API token diberikan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        400:
+          description: Kredensial salah
+
+  /logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Berhasil logout
+        401:
+          description: Autentikasi diperlukan
+
+  /movies:
+    get:
+      tags:
+        - Films
+      summary: Mendapatkan semua film (Membership diperlukan)
+      security:
+        - bearerAuth: []
+      description: Mengambil semua film beserta genre-nya. Pengguna harus berlangganan untuk mengakses film.
+      responses:
+        200:
+          description: Daftar film berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+        401:
+          description: Pengguna tidak memiliki membership yang diperlukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Films
+      summary: Menambahkan film baru
+      security:
+        - bearerAuth: []
+      description: Menambah film baru dengan genre terkait.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        201:
+          description: Film berhasil ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+
+  /movies/{id}:
+    get:
+      tags:
+        - Films
+      summary: Mendapatkan detail film (Membership diperlukan)
+      security:
+        - bearerAuth: []
+      description: Mengambil detail sebuah film berdasarkan ID beserta genre-nya. Pengguna harus berlangganan untuk mengakses.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Detail film berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        401:
+          description: Pengguna tidak memiliki membership yang diperlukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: Film tidak ditemukan
+
+    put:
+      tags:
+        - Films
+      summary: Mengupdate film
+      security:
+        - bearerAuth: []
+      description: Mengupdate detail film dan genre berdasarkan ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieInput'
+      responses:
+        200:
+          description: Film berhasil diupdate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        404:
+          description: Film tidak ditemukan
+
+    delete:
+      tags:
+        - Films
+      summary: Menghapus film
+      security:
+        - bearerAuth: []
+      description: Menghapus film berdasarkan ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Film berhasil dihapus
+        404:
+          description: Film tidak ditemukan
+
+  /genres:
+    get:
+      tags:
+        - Genres
+      summary: Mendapatkan semua genre
+      security:
+        - bearerAuth: []
+      description: Mengambil semua genre yang tersedia.
+      responses:
+        200:
+          description: Daftar genre berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genre'
+
+  /genres/{id}:
+    get:
+      tags:
+        - Genres
+      summary: Mendapatkan detail genre
+      security:
+        - bearerAuth: []
+      description: Mengambil detail sebuah genre berdasarkan ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Detail genre berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+        404:
+          description: Genre tidak ditemukan
+
+  /memberships:
+    get:
+      tags:
+        - Memberships
+      summary: Mendapatkan semua membership
+      description: Mengambil semua opsi membership yang tersedia.
+      responses:
+        200:
+          description: Daftar membership berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Membership'
+
+  /memberships/subscribe:
+    post:
+      tags:
+        - Memberships
+      summary: Berlangganan membership
+      description: Mengizinkan pengguna untuk berlangganan membership.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                membership_id:
+                  type: integer
+                  description: ID dari membership yang ingin dipilih pengguna
+      responses:
+        200:
+          description: Berhasil berlangganan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        401:
+          description: Autentikasi diperlukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID unik film
+        title:
+          type: string
+          description: Judul film
+        description:
+          type: string
+          description: Deskripsi singkat film
+        releaseYear:
+          type: integer
+          description: Tahun rilis film
+        genre:
+          $ref: '#/components/schemas/Genre'
+        createdAt:
+          type: string
+          format: date-time
+          description: Waktu pembuatan film
+        updatedAt:
+          type: string
+          format: date-time
+          description: Waktu pembaruan film
+
+    MovieInput:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Judul film
+        description:
+          type: string
+          description: Deskripsi film
+        release_year:
+          type: integer
+          description: Tahun rilis film
+        genre_id:
+          type: integer
+          description: ID genre yang terkait dengan film
+
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID unik genre
+        name:
+          type: string
+          description: Nama genre
+        createdAt:
+          type: string
+          format: date-time
+          description: Waktu pembuatan genre
+        updatedAt:
+          type: string
+          format: date-time
+          description: Waktu pembaruan genre
+
+    Membership:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID unik membership
+        name:
+          type: string
+          description: Nama membership, (contoh Free, Premium)
+        price:
+          type: number
+          format: float
+          description: Harga membership
+        createdAt:
+          type: string
+          format: date-time
+          description: Waktu pembuatan membership
+        updatedAt:
+          type: string
+          format: date-time
+          description: Waktu pembaruan membership
+
+    SubscriptionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Pesan sukses berlangganan
+        membership:
+          $ref: '#/components/schemas/Membership'
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Deskripsi error

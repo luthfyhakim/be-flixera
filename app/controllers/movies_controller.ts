@@ -1,29 +1,41 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Movie from '#models/movie'
 import Genre from '#models/genre'
+import { movieValidator } from '#validators/movie'
 
 export default class MoviesController {
-  async index({response}: HttpContext) {
+  async index({ auth, response }: HttpContext) {
+    const user = auth.user
+    if (!user || user.membershipId === null) {
+      return response.unauthorized({ message: 'You do not have a membership' })
+    }
+
     const movies = await Movie.query().preload('genre')
     return response.json(movies)
   }
 
   async store({ request, response }: HttpContext) {
-    const data = request.only(['title', 'description', 'releaseYear', 'genre_id'])
+    const data = await request.validateUsing(movieValidator)
 
     const genre = await Genre.findOrFail(data.genre_id)
 
     const movie = await Movie.create({
       title: data.title,
       description: data.description,
-      releaseYear: data.releaseYear,
+      releaseYear: data.release_year,
       genreId: genre.id
     })
 
     return response.created(movie)
   }
 
-  async show({ params, response }: HttpContext) {
+  async show({ params, auth, response }: HttpContext) {
+    const user = auth.user
+
+    if (!user || user.membershipId === null) {
+      return response.unauthorized({ message: 'You do not have a membership' })
+    }
+
     try {
       const movie = await Movie.query().where('id', params.id).preload('genre').firstOrFail()
       return response.json(movie)
@@ -35,11 +47,11 @@ export default class MoviesController {
   async update({ params, request, response }: HttpContext) {
     try {
       const movie = await Movie.findOrFail(params.id)
-      const data = request.only(['title', 'description', 'releaseYear', 'genre_id'])
+      const data = await request.validateUsing(movieValidator)
 
       movie.title = data.title
       movie.description = data.description
-      movie.releaseYear = data.releaseYear
+      movie.releaseYear = data.release_year
       movie.genreId = data.genre_id
 
       await movie.save()
