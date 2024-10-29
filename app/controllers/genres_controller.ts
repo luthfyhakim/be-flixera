@@ -1,8 +1,15 @@
 import Genre from '#models/genre'
+import Movie from '#models/movie'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class GenresController {
-	async index({ response }: HttpContext) {
+	async index({ request, response }: HttpContext) {
+		const genreId = request.input('genre_id')
+		if (genreId) {
+			const movies = await Movie.query().where('genre_id', genreId).preload('genre')
+			return response.ok(movies)
+		}
+		
 		const genres = await Genre.all()
 		return response.ok(genres)
 	}

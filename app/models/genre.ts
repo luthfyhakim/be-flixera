@@ -17,6 +17,6 @@ export default class Genre extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @hasMany(() => Movie) //Genre memiliki banyak file
-  declare films: HasMany<typeof Movie>
+  @hasMany(() => Movie)
+  declare movies: HasMany<typeof Movie>
 }

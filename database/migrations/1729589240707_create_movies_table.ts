@@ -8,8 +8,11 @@ export default class extends BaseSchema {
       table.increments('id').primary()
 
       table.string('title').notNullable()
+      table.string('image')
+      table.string('duration')
       table.text('description')
       table.integer('release_year')
+      table.string('video')
 
       table.integer('genre_id').unsigned().references('id').inTable('genres').onDelete('CASCADE')
 

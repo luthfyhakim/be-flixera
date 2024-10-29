@@ -20,16 +20,18 @@ router.get('/me', [AuthController, 'me']).as('auth.me').use(middleware.auth())
 
 router.group(() => {
   router.get('/', [MoviesController, 'index'])
+  router.get('/list', [MoviesController, 'list'])
+  router.get('/genre', [MoviesController, 'getByGenre'])
   router.post('/', [MoviesController, 'store'])
   router.get('/:id', [MoviesController, 'show'])
   router.put('/:id', [MoviesController, 'update'])
   router.delete('/:id', [MoviesController, 'destroy'])
-}).prefix('api/v1/movies').use(middleware.auth())
+}).prefix('api/v1/movies')
 
 router.group(() => {
   router.get('/', [GenresController, 'index'])
   router.get('/:id', [GenresController, 'show'])
-}).prefix('api/v1/genres').use(middleware.auth())
+}).prefix('api/v1/genres')
 
 router.get('/api/v1/memberships', [MembershipController, 'index']).use(middleware.auth())
 router.post('/api/v1/memberships/subscribe', [MembershipController, 'subscribe']).use(middleware.auth())

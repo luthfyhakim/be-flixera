@@ -4,14 +4,38 @@ import Genre from '#models/genre'
 import { movieValidator } from '#validators/movie'
 
 export default class MoviesController {
-  async index({ auth, response }: HttpContext) {
+  async index({ auth, request, response }: HttpContext) {
     const user = auth.user
     if (user?.membershipId === null) {
       return response.unauthorized({ message: 'You do not have a membership' })
     }
 
+    const query = request.input('title')
+    if (query) {
+      const movies = await Movie.query()
+        .where('title', 'like', `%${query}%`)
+        .preload('genre')
+
+      if (!movies.length) {
+        return response.notFound({ message: 'No movies found matching your query' })
+      }
+
+      return response.ok(movies)
+    }
+
     const movies = await Movie.query().preload('genre')
-    return response.json(movies)
+    return response.ok(movies)
+  }
+
+  async list({ auth, request, response }: HttpContext) {
+    const user = auth.user
+    if (user?.membershipId === null) {
+      return response.unauthorized({ message: 'You do not have a membership' })
+    }
+
+    const limit = request.input('limit', 6)
+    const movies = await Movie.query().preload('genre').limit(limit)
+    return response.ok(movies)
   }
 
   async store({ request, response }: HttpContext) {
@@ -31,17 +55,35 @@ export default class MoviesController {
 
   async show({ params, auth, response }: HttpContext) {
     const user = auth.user
-
-    if (!user || user.membershipId === null) {
+    if (user?.membershipId === null) {
       return response.unauthorized({ message: 'You do not have a membership' })
     }
 
     try {
       const movie = await Movie.query().where('id', params.id).preload('genre').firstOrFail()
-      return response.json(movie)
+      return response.ok(movie)
     } catch (error) {
       return response.notFound({ message: 'Movie not found' })
     }
+  }
+
+  async getByGenre({ auth, request, response }: HttpContext) {
+    const user = auth.user
+    if (user?.membershipId === null) {
+      return response.unauthorized({ message: 'You do not have a membership' })
+    }
+
+    const genreId = request.input('genre_id')
+    if (!genreId) {
+      return response.badRequest({ message: 'Genre ID is required' })
+    }
+
+    const movies = await Movie.query().where('genre_id', genreId).preload('genre')
+    if (!movies.length) {
+      return response.notFound({ message: 'No movies found for this genre' })
+    }
+
+    return response.ok(movies)
   }
 
   async update({ params, request, response }: HttpContext) {
