@@ -8,11 +8,14 @@ export default class extends BaseSchema {
       table.increments('id').primary()
 
       table.string('title').notNullable()
-      table.string('image')
+      table.text('image')
       table.string('duration')
       table.text('description')
       table.integer('release_year')
       table.string('video')
+      table.text('playimg')
+      table.text('trailerimg_1').nullable().defaultTo('')
+      table.text('trailerimg_2').nullable().defaultTo('')
 
       table.integer('genre_id').unsigned().references('id').inTable('genres').onDelete('CASCADE')
 
@@ -25,3 +28,4 @@ export default class extends BaseSchema {
     this.schema.dropTable(this.tableName)
   }
 }
+

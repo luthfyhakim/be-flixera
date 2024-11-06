@@ -14,6 +14,9 @@ export default class Movie extends BaseModel {
   declare image: string
 
   @column()
+  declare playimg: string
+
+  @column()
   declare duration: string
 
   @column()
@@ -27,6 +30,12 @@ export default class Movie extends BaseModel {
 
   @column()
   declare genreId: number
+
+  @column()
+  declare trailerimg_1: string
+
+  @column()
+  declare trailerimg_2: string
 
   @belongsTo(() => Genre)
   declare genre: BelongsTo<typeof Genre>
